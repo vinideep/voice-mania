@@ -322,6 +322,13 @@ struct ModeConfigFormView: View {
                         InfoTip("Record both your microphone and system audio (e.g., other participants' voices) simultaneously.")
                     }
                 }
+                
+                Toggle(isOn: $draft.captureMicrophone) {
+                    HStack(spacing: 4) {
+                        Text("Capture Microphone")
+                        InfoTip("Record your own voice using the selected input device.")
+                    }
+                }
             }
         } header: {
             Text("Meeting Copilot")

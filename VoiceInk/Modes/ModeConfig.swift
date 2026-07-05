@@ -92,6 +92,7 @@ struct ModeConfig: Codable, Identifiable, Equatable {
     // Meeting mode properties
     var meetingRecordingMode: Bool = false
     var captureSystemAudio: Bool = false
+    var captureMicrophone: Bool = true
         
     enum CodingKeys: String, CodingKey {
         case id, name, icon, appConfigs, urlConfigs, triggerGroups, isAIEnhancementEnabled, selectedPrompt, isRealtimeTranscriptionEnabled, selectedLanguage, isTextFormattingEnabled, punctuationCleanupMode, removePunctuation, lowercaseTranscription, useClipboardContext, useSelectedTextContext, useScreenCapture, selectedAIProvider, selectedAIModel, outputMode, isAutoSendEnabled, autoSendKey, customCommand, isEnabled, isDefault
@@ -100,6 +101,7 @@ struct ModeConfig: Codable, Identifiable, Equatable {
         case selectedTranscriptionModelName
         case meetingRecordingMode
         case captureSystemAudio
+        case captureMicrophone
     }
     
     init(id: UUID = UUID(), name: String, icon: ModeIcon = .defaultIcon, appConfigs: [AppConfig]? = nil,
@@ -107,7 +109,7 @@ struct ModeConfig: Codable, Identifiable, Equatable {
          selectedTranscriptionModelName: String? = nil, isRealtimeTranscriptionEnabled: Bool = true, selectedLanguage: String? = nil, useClipboardContext: Bool = false, useSelectedTextContext: Bool = true, useScreenCapture: Bool = false,
          isTextFormattingEnabled: Bool = false, punctuationCleanupMode: PunctuationCleanupMode = .keep, lowercaseTranscription: Bool = false,
          selectedAIProvider: String? = nil, selectedAIModel: String? = nil, outputMode: ModeOutputMode = .paste, autoSendKey: AutoSendKey = .none, customCommand: ModeCustomCommand? = nil, isEnabled: Bool = true, isDefault: Bool = false,
-         meetingRecordingMode: Bool = false, captureSystemAudio: Bool = false) {
+         meetingRecordingMode: Bool = false, captureSystemAudio: Bool = false, captureMicrophone: Bool = true) {
         self.id = id
         self.name = name
         self.icon = icon
@@ -134,6 +136,7 @@ struct ModeConfig: Codable, Identifiable, Equatable {
         self.isDefault = isDefault
         self.meetingRecordingMode = meetingRecordingMode
         self.captureSystemAudio = captureSystemAudio
+        self.captureMicrophone = captureMicrophone
     }
 
     init(from decoder: Decoder) throws {
@@ -189,6 +192,7 @@ struct ModeConfig: Codable, Identifiable, Equatable {
         isDefault = try container.decodeIfPresent(Bool.self, forKey: .isDefault) ?? false
         meetingRecordingMode = try container.decodeIfPresent(Bool.self, forKey: .meetingRecordingMode) ?? false
         captureSystemAudio = try container.decodeIfPresent(Bool.self, forKey: .captureSystemAudio) ?? false
+        captureMicrophone = try container.decodeIfPresent(Bool.self, forKey: .captureMicrophone) ?? true
 
         if let newModelName = try container.decodeIfPresent(String.self, forKey: .selectedTranscriptionModelName) {
             selectedTranscriptionModelName = newModelName
@@ -228,6 +232,7 @@ struct ModeConfig: Codable, Identifiable, Equatable {
         try container.encode(isDefault, forKey: .isDefault)
         try container.encode(meetingRecordingMode, forKey: .meetingRecordingMode)
         try container.encode(captureSystemAudio, forKey: .captureSystemAudio)
+        try container.encode(captureMicrophone, forKey: .captureMicrophone)
     }
     
     

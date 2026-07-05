@@ -194,10 +194,18 @@ class VoiceInkEngine: NSObject, ObservableObject {
                                 pendingChunks.withLock { $0.append(data) }
                             }
 
+                            let meetingConfiguration = ModeRuntimeResolver.meetingConfiguration(mode: modeId != nil ? ModeManager.shared.configurations.first { $0.id == modeId } : nil)
+                            let shouldStartMic = !meetingConfiguration.isMeetingRecordingMode || meetingConfiguration.captureMicrophone
+
                             self.recordingState = .starting
                             self.recorder.scheduleSystemMute()
 
-                            try await self.recorder.startRecording(toOutputFile: permanentURL)
+                            if shouldStartMic {
+                                try await self.recorder.startRecording(toOutputFile: permanentURL)
+                            } else {
+                                // Bypass starting the mic, but mark recording active
+                                AudioDeviceManager.shared.isRecordingActive = true
+                            }
 
                             guard self.activeRecordingStartID == startID,
                                   self.recorderUIManager?.isRecorderPanelVisible ?? false,
@@ -205,7 +213,11 @@ class VoiceInkEngine: NSObject, ObservableObject {
                                 activeModeTask.cancel()
                                 let shouldKeepRecordingFile = self.shouldCancelRecording
                                 if self.activeRecordingStartID == startID {
-                                    await self.recorder.stopRecording()
+                                    if shouldStartMic {
+                                        await self.recorder.stopRecording()
+                                    } else {
+                                        AudioDeviceManager.shared.isRecordingActive = false
+                                    }
                                     if !shouldKeepRecordingFile {
                                         self.recordedFile = nil
                                     }
@@ -231,7 +243,11 @@ class VoiceInkEngine: NSObject, ObservableObject {
                                 transcriptionModelManager: self.transcriptionModelManager
                             ) else {
                                 NotificationManager.shared.showNotification(title: String(localized: "No AI Model Selected"), type: .error)
-                                await self.recorder.stopRecording()
+                                if shouldStartMic {
+                                    await self.recorder.stopRecording()
+                                } else {
+                                    AudioDeviceManager.shared.isRecordingActive = false
+                                }
                                 try? FileManager.default.removeItem(at: permanentURL)
                                 self.recordedFile = nil
                                 self.recordingState = .idle
@@ -242,19 +258,29 @@ class VoiceInkEngine: NSObject, ObservableObject {
                                 return
                             }
 
-                            let meetingConfiguration = ModeRuntimeResolver.meetingConfiguration(mode: modeId != nil ? ModeManager.shared.configurations.first { $0.id == modeId } : nil)
                             if meetingConfiguration.isMeetingRecordingMode {
                                 let manager = MeetingTranscriptManager()
                                 self.meetingTranscriptManager = manager
+                                
+                                manager.onUtteranceUpdate = { [weak self] liveText in
+                                    Task { @MainActor in
+                                        guard let self, self.activeRecordingStartID == startID, self.recordingState == .recording else { return }
+                                        self.partialTranscript = liveText
+                                    }
+                                }
                                 
                                 if let model = transcriptionConfiguration.model as? FluidAudioModel {
                                     try? await manager.startMeeting(
                                         fluidAudioService: self.serviceRegistry.fluidAudioTranscriptionService,
                                         model: model,
-                                        language: transcriptionConfiguration.language
+                                        language: transcriptionConfiguration.language,
+                                        captureMicrophone: meetingConfiguration.captureMicrophone
                                     )
-                                    self.recorder.onAudioChunk = { chunk in
-                                        manager.feedMicChunk(chunk)
+                                    
+                                    if shouldStartMic {
+                                        self.recorder.onAudioChunk = { chunk in
+                                            manager.feedMicChunk(chunk)
+                                        }
                                     }
                                     let buffered = pendingChunks.withLock { chunks -> [Data] in
                                         let result = chunks

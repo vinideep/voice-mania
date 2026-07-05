@@ -63,6 +63,7 @@ struct MeetingRuntimeConfiguration {
     let mode: ModeConfig?
     let isMeetingRecordingMode: Bool
     let captureSystemAudio: Bool
+    let captureMicrophone: Bool
 }
 
 @MainActor
@@ -153,7 +154,8 @@ enum ModeRuntimeResolver {
         return MeetingRuntimeConfiguration(
             mode: mode,
             isMeetingRecordingMode: mode?.meetingRecordingMode ?? false,
-            captureSystemAudio: mode?.captureSystemAudio ?? false
+            captureSystemAudio: mode?.captureSystemAudio ?? false,
+            captureMicrophone: mode?.captureMicrophone ?? true
         )
     }
 

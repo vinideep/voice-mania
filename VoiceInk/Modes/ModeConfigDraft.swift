@@ -26,6 +26,7 @@ struct ModeConfigDraft {
     var isDefault: Bool
     var meetingRecordingMode: Bool
     var captureSystemAudio: Bool
+    var captureMicrophone: Bool
     var isTranscriptionFormattingExpanded: Bool
 
     private var sourceConfig: ModeConfig?
@@ -60,6 +61,7 @@ struct ModeConfigDraft {
             isDefault = false
             meetingRecordingMode = false
             captureSystemAudio = false
+            captureMicrophone = true
             isTranscriptionFormattingExpanded = false
             sourceConfig = nil
 
@@ -90,6 +92,7 @@ struct ModeConfigDraft {
             isDefault = latestConfig.isDefault
             meetingRecordingMode = latestConfig.meetingRecordingMode ?? false
             captureSystemAudio = latestConfig.captureSystemAudio ?? false
+            captureMicrophone = latestConfig.captureMicrophone ?? true
             isTranscriptionFormattingExpanded = false
             sourceConfig = latestConfig
         }
@@ -194,7 +197,8 @@ struct ModeConfigDraft {
                 customCommand: savedCustomCommand,
                 isDefault: savedIsDefault,
                 meetingRecordingMode: meetingRecordingMode,
-                captureSystemAudio: captureSystemAudio
+                captureSystemAudio: captureSystemAudio,
+                captureMicrophone: captureMicrophone
             )
 
         case .edit(let config):
@@ -223,6 +227,7 @@ struct ModeConfigDraft {
             updatedConfig.isDefault = savedIsDefault
             updatedConfig.meetingRecordingMode = meetingRecordingMode
             updatedConfig.captureSystemAudio = captureSystemAudio
+            updatedConfig.captureMicrophone = captureMicrophone
             return updatedConfig
         }
     }
