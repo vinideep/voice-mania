@@ -22,6 +22,7 @@ enum PromptTemplates {
     static let emailPromptId = UUID(uuidString: "00000000-0000-0000-0000-000000000003")!
     static let rewritePromptId = UUID(uuidString: "00000000-0000-0000-0000-000000000004")!
     static let assistantPromptId = UUID(uuidString: "00000000-0000-0000-0000-000000000005")!
+    static let meetingPromptId = UUID(uuidString: "00000000-0000-0000-0000-000000000006")!
 
     static var all: [TemplatePrompt] {
         createTemplatePrompts()
@@ -123,6 +124,40 @@ enum PromptTemplates {
                     - Use clear structure for steps, options, comparisons, or decisions.
                     - If the answer depends on information that is not in <USER_MESSAGE> or the provided context, say what is missing instead of pretending to know.
                     - Do not include labels, XML tags, markdown fences, or metadata.
+                    """,
+                useSystemInstructions: false
+            ),
+            TemplatePrompt(
+                id: meetingPromptId,
+                title: "Meeting Copilot",
+                promptText: """
+                    You are a meeting note-taker. The transcript below has speaker labels: [You] = the user, [Others] = other meeting participants.
+
+                    Produce structured meeting notes in this EXACT format:
+
+                    ## Summary
+                    [2-3 sentences describing what the meeting was about]
+
+                    ## Key Points
+                    - [Main discussion point 1]
+                    - [Main discussion point 2]
+
+                    ## Decisions
+                    - [Any decisions that were made]
+
+                    ## Action Items
+                    - [ ] [Task] — [Who is responsible, if mentioned]
+
+                    ## Open Questions
+                    - [Anything unresolved]
+
+                    Rules:
+                    - Be concise. Each bullet should be one sentence.
+                    - If no decisions or action items exist, write "None identified."
+                    - Preserve who said what when it matters.
+                    - Do NOT add information that wasn't in the transcript.
+
+                    TRANSCRIPT:
                     """,
                 useSystemInstructions: false
             )

@@ -19,6 +19,7 @@ class VoiceInkEngine: NSObject, ObservableObject {
     @Published var recordingState: RecordingState = .idle
     @Published var shouldCancelRecording = false
     @Published var partialTranscript: String = ""
+    @Published var meetingTranscriptManager: MeetingTranscriptManager?
     var currentSession: TranscriptionSession?
     private var currentSessionTranscriptionConfiguration: TranscriptionRuntimeConfiguration?
     private var activeRecordingStartID: UUID?
@@ -114,6 +115,22 @@ class VoiceInkEngine: NSObject, ObservableObject {
             partialTranscript = ""
             recordingState = .transcribing
             await recorder.stopRecording()
+
+            if let manager = meetingTranscriptManager {
+                self.meetingTranscriptManager = nil
+                recordingState = .busy
+                
+                let transcript = await manager.stopMeeting()
+                Task {
+                    await handleMeetingSummary(fullTranscript: transcript)
+                    await MainActor.run {
+                        self.recordingState = .idle
+                        self.activePipelineUseCase = .newSession
+                    }
+                }
+                await cleanupResources()
+                return
+            }
 
             if let recordedFile {
                 if !shouldCancelRecording {
@@ -225,7 +242,28 @@ class VoiceInkEngine: NSObject, ObservableObject {
                                 return
                             }
 
-                            if self.serviceRegistry.shouldUseRealtimeTranscription(for: transcriptionConfiguration) {
+                            let meetingConfiguration = ModeRuntimeResolver.meetingConfiguration(mode: modeId != nil ? ModeManager.shared.configurations.first { $0.id == modeId } : nil)
+                            if meetingConfiguration.isMeetingRecordingMode {
+                                let manager = MeetingTranscriptManager()
+                                self.meetingTranscriptManager = manager
+                                
+                                if let model = transcriptionConfiguration.model as? FluidAudioModel {
+                                    try? await manager.startMeeting(
+                                        fluidAudioService: self.serviceRegistry.fluidAudioTranscriptionService,
+                                        model: model,
+                                        language: transcriptionConfiguration.language
+                                    )
+                                    self.recorder.onAudioChunk = { chunk in
+                                        manager.feedMicChunk(chunk)
+                                    }
+                                    let buffered = pendingChunks.withLock { chunks -> [Data] in
+                                        let result = chunks
+                                        chunks.removeAll()
+                                        return result
+                                    }
+                                    for chunk in buffered { manager.feedMicChunk(chunk) }
+                                }
+                            } else if self.serviceRegistry.shouldUseRealtimeTranscription(for: transcriptionConfiguration) {
                                 let session = self.serviceRegistry.createSession(
                                     for: transcriptionConfiguration,
                                     onPartialTranscript: { [weak self] partial in
@@ -326,6 +364,49 @@ class VoiceInkEngine: NSObject, ObservableObject {
         activeRecordingContextTasks.forEach { $0.cancel() }
         activeRecordingContextTasks.removeAll()
         activeRecordingContextStore = nil
+    }
+
+    // MARK: - Meeting Handlers
+
+    private func handleMeetingSummary(fullTranscript: String) async {
+        let meeting = MeetingSession()
+        meeting.fullTranscript = fullTranscript
+        meeting.endTime = Date()
+        meeting.totalDuration = meeting.endTime?.timeIntervalSince(meeting.startTime) ?? 0
+        meeting.status = "summarizing"
+        
+        await MainActor.run {
+            modelContext.insert(meeting)
+            try? modelContext.save()
+        }
+        
+        guard let enhancementService = enhancementService,
+              let aiService = enhancementService.getAIService() else {
+            await MainActor.run {
+                meeting.status = "failed"
+                try? modelContext.save()
+            }
+            return
+        }
+        
+        let promptId = PromptTemplates.meetingPromptId
+        let prompt = enhancementService.allPrompts.first { $0.id == promptId }
+        let systemPrompt = prompt?.promptText ?? "You are a meeting note-taker."
+        
+        do {
+            let summary = try await aiService.enhanceWithOllama(text: fullTranscript, systemPrompt: systemPrompt, timeout: 120)
+            await MainActor.run {
+                meeting.summary = summary
+                meeting.status = "completed"
+                try? modelContext.save()
+            }
+        } catch {
+            logger.error("❌ Meeting summarization failed: \(error.localizedDescription, privacy: .public)")
+            await MainActor.run {
+                meeting.status = "failed"
+                try? modelContext.save()
+            }
+        }
     }
 
     // MARK: - Pipeline Dispatch

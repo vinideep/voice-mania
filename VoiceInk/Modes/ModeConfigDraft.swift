@@ -24,6 +24,8 @@ struct ModeConfigDraft {
     var autoSendKey: AutoSendKey
     var customCommand: String
     var isDefault: Bool
+    var meetingRecordingMode: Bool
+    var captureSystemAudio: Bool
     var isTranscriptionFormattingExpanded: Bool
 
     private var sourceConfig: ModeConfig?
@@ -56,6 +58,8 @@ struct ModeConfigDraft {
             autoSendKey = .none
             customCommand = inheritedConfig?.customCommand?.command ?? ""
             isDefault = false
+            meetingRecordingMode = false
+            captureSystemAudio = false
             isTranscriptionFormattingExpanded = false
             sourceConfig = nil
 
@@ -84,6 +88,8 @@ struct ModeConfigDraft {
             autoSendKey = latestConfig.autoSendKey
             customCommand = latestConfig.customCommand?.command ?? ""
             isDefault = latestConfig.isDefault
+            meetingRecordingMode = latestConfig.meetingRecordingMode ?? false
+            captureSystemAudio = latestConfig.captureSystemAudio ?? false
             isTranscriptionFormattingExpanded = false
             sourceConfig = latestConfig
         }
@@ -186,7 +192,9 @@ struct ModeConfigDraft {
                 outputMode: outputMode,
                 autoSendKey: savedAutoSendKey,
                 customCommand: savedCustomCommand,
-                isDefault: savedIsDefault
+                isDefault: savedIsDefault,
+                meetingRecordingMode: meetingRecordingMode,
+                captureSystemAudio: captureSystemAudio
             )
 
         case .edit(let config):
@@ -213,6 +221,8 @@ struct ModeConfigDraft {
             updatedConfig.autoSendKey = savedAutoSendKey
             updatedConfig.customCommand = savedCustomCommand
             updatedConfig.isDefault = savedIsDefault
+            updatedConfig.meetingRecordingMode = meetingRecordingMode
+            updatedConfig.captureSystemAudio = captureSystemAudio
             return updatedConfig
         }
     }

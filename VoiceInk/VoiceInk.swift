@@ -49,7 +49,8 @@ struct VoiceInkApp: App {
             Transcription.self,
             VocabularyWord.self,
             WordReplacement.self,
-            SessionMetric.self
+            SessionMetric.self,
+            MeetingSession.self
         ])
         let resolvedContainer: ModelContainer
 
@@ -234,8 +235,17 @@ struct VoiceInkApp: App {
             cloudKitDatabase: .none
         )
 
+        let meetingSchema = Schema([MeetingSession.self])
+        let meetingStoreURL = appSupportURL.appendingPathComponent("meetings.store")
+        let meetingConfig = ModelConfiguration(
+            "meetings",
+            schema: meetingSchema,
+            url: meetingStoreURL,
+            cloudKitDatabase: .none
+        )
+
         do {
-            return try ModelContainer(for: schema, configurations: transcriptConfig, dictionaryConfig, statsConfig)
+            return try ModelContainer(for: schema, configurations: transcriptConfig, dictionaryConfig, statsConfig, meetingConfig)
         } catch {
             logger.error("❌ Failed to create persistent ModelContainer:\n\(Self.fullErrorDescription(error), privacy: .public)")
             throw error
@@ -252,8 +262,11 @@ struct VoiceInkApp: App {
         let statsSchema = Schema([SessionMetric.self])
         let statsConfig = ModelConfiguration("stats", schema: statsSchema, isStoredInMemoryOnly: true)
 
+        let meetingSchema = Schema([MeetingSession.self])
+        let meetingConfig = ModelConfiguration("meetings", schema: meetingSchema, isStoredInMemoryOnly: true)
+
         do {
-            return try ModelContainer(for: schema, configurations: transcriptConfig, dictionaryConfig, statsConfig)
+            return try ModelContainer(for: schema, configurations: transcriptConfig, dictionaryConfig, statsConfig, meetingConfig)
         } catch {
             logger.error("❌ Failed to create in-memory ModelContainer:\n\(Self.fullErrorDescription(error), privacy: .public)")
             throw error

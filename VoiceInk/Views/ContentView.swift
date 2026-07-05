@@ -7,6 +7,7 @@ enum ViewType: String, CaseIterable, Identifiable {
     case models = "AI Models"
     case transcribeAudio = "Transcribe Audio"
     case history = "History"
+    case meetings = "Meetings"
     case audio = "Audio"
     case dictionary = "Dictionary"
     case settings = "Settings"
@@ -74,6 +75,8 @@ struct ContentView: View {
             AudioTranscribeView()
         case .history:
             InlineHistoryView()
+        case .meetings:
+            MeetingWorkspaceView()
         case .audio:
             AudioSetupView()
         case .dictionary:

@@ -6,6 +6,7 @@ enum StarterModeKind: String, CaseIterable, Identifiable {
     case email
     case rewrite
     case assistant
+    case meeting
 
     var id: String { rawValue }
 }
@@ -23,6 +24,8 @@ struct StarterModeTemplate: Identifiable {
     let useSelectedTextContext: Bool
     let useScreenCapture: Bool
     let isDefault: Bool
+    let isMeetingRecordingMode: Bool
+    let captureSystemAudio: Bool
 
     var featureLabels: [String] {
         var labels = ["Parakeet V3", "Realtime"]
@@ -57,7 +60,9 @@ enum StarterModeCatalog {
             usesAIEnhancement: false,
             useSelectedTextContext: false,
             useScreenCapture: false,
-            isDefault: true
+            isDefault: true,
+            isMeetingRecordingMode: false,
+            captureSystemAudio: false
         ),
         StarterModeTemplate(
             kind: .enhance,
@@ -71,7 +76,9 @@ enum StarterModeCatalog {
             usesAIEnhancement: true,
             useSelectedTextContext: true,
             useScreenCapture: true,
-            isDefault: false
+            isDefault: false,
+            isMeetingRecordingMode: false,
+            captureSystemAudio: false
         ),
         StarterModeTemplate(
             kind: .email,
@@ -85,7 +92,9 @@ enum StarterModeCatalog {
             usesAIEnhancement: true,
             useSelectedTextContext: true,
             useScreenCapture: true,
-            isDefault: false
+            isDefault: false,
+            isMeetingRecordingMode: false,
+            captureSystemAudio: false
         ),
         StarterModeTemplate(
             kind: .rewrite,
@@ -99,7 +108,9 @@ enum StarterModeCatalog {
             usesAIEnhancement: true,
             useSelectedTextContext: true,
             useScreenCapture: false,
-            isDefault: false
+            isDefault: false,
+            isMeetingRecordingMode: false,
+            captureSystemAudio: false
         ),
         StarterModeTemplate(
             kind: .assistant,
@@ -113,7 +124,25 @@ enum StarterModeCatalog {
             usesAIEnhancement: true,
             useSelectedTextContext: false,
             useScreenCapture: false,
-            isDefault: false
+            isDefault: false,
+            isMeetingRecordingMode: false,
+            captureSystemAudio: false
+        ),
+        StarterModeTemplate(
+            kind: .meeting,
+            id: UUID(uuidString: "10000000-0000-0000-0000-000000000006")!,
+            name: "Meeting Copilot",
+            icon: .symbol("person.2.wave.2"),
+            description: "Record meetings and generate AI summaries.",
+            guidance: "Use this to capture both your microphone and system audio during a meeting, generating speaker-labeled notes and an Ollama summary.",
+            promptId: PromptTemplates.meetingPromptId,
+            outputMode: .respond,
+            usesAIEnhancement: true,
+            useSelectedTextContext: false,
+            useScreenCapture: false,
+            isDefault: false,
+            isMeetingRecordingMode: true,
+            captureSystemAudio: true
         )
     ]
 

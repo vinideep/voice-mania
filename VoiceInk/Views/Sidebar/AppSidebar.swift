@@ -71,6 +71,7 @@ private extension ViewType {
         .modes,
         .transcribeAudio,
         .history,
+        .meetings,
         .dictionary,
         .models,
         .audio
@@ -93,6 +94,7 @@ private extension ViewType {
         case .dashboard: return "gauge.medium"
         case .transcribeAudio: return "waveform.path"
         case .history: return "doc.text.fill"
+        case .meetings: return "person.2.wave.2"
         case .models: return "cpu"
         case .modes: return "sparkles.square.fill.on.square"
         case .audio: return "mic.fill"
@@ -122,6 +124,8 @@ private extension ViewType {
             return .init(background: AppTheme.Sidebar.fallback)
         case .license:
             return .init(background: AppTheme.Sidebar.license)
+        case .meetings:
+            return .init(background: AppTheme.Sidebar.modes)
         }
     }
 }

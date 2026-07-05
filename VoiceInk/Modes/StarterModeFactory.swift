@@ -85,7 +85,9 @@ enum StarterModeFactory {
             outputMode: template.outputMode,
             autoSendKey: .none,
             isEnabled: true,
-            isDefault: template.isDefault
+            isDefault: template.isDefault,
+            meetingRecordingMode: template.isMeetingRecordingMode,
+            captureSystemAudio: template.captureSystemAudio
         )
     }
 

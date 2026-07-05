@@ -135,6 +135,7 @@ struct ModeConfigFormView: View {
                 cleanURL: modeManager.cleanURL
             )
             transcriptionSection
+            meetingSection
             aiEnhancementSection
             advancedSection
         }
@@ -302,6 +303,32 @@ struct ModeConfigFormView: View {
                         draft.selectedLanguage = "en"
                     }
                 }
+        }
+    }
+
+    private var meetingSection: some View {
+        Section {
+            Toggle(isOn: $draft.meetingRecordingMode) {
+                HStack(spacing: 4) {
+                    Text("Meeting Recording Mode")
+                    InfoTip("When enabled, this mode will record and transcribe long meetings, showing an active meeting workspace in the sidebar.")
+                }
+            }
+
+            if draft.meetingRecordingMode {
+                Toggle(isOn: $draft.captureSystemAudio) {
+                    HStack(spacing: 4) {
+                        Text("Capture System Audio")
+                        InfoTip("Record both your microphone and system audio (e.g., other participants' voices) simultaneously.")
+                    }
+                }
+            }
+        } header: {
+            Text("Meeting Copilot")
+        } footer: {
+            if draft.meetingRecordingMode {
+                Text("Meeting mode always produces a summary to the Meeting Workspace and ignores paste/output mode settings.")
+            }
         }
     }
 

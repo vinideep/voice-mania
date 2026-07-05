@@ -59,6 +59,12 @@ struct OutputRuntimeConfiguration {
     let customCommand: ModeCustomCommand?
 }
 
+struct MeetingRuntimeConfiguration {
+    let mode: ModeConfig?
+    let isMeetingRecordingMode: Bool
+    let captureSystemAudio: Bool
+}
+
 @MainActor
 enum ModeRuntimeResolver {
     static func transcriptionConfiguration(
@@ -138,6 +144,16 @@ enum ModeRuntimeResolver {
             outputMode: mode?.outputMode ?? .paste,
             autoSendKey: mode?.autoSendKey ?? .none,
             customCommand: mode?.customCommand
+        )
+    }
+
+    static func meetingConfiguration(mode: ModeConfig? = nil) -> MeetingRuntimeConfiguration {
+        let mode = mode ?? ModeManager.shared.currentEffectiveConfiguration
+        
+        return MeetingRuntimeConfiguration(
+            mode: mode,
+            isMeetingRecordingMode: mode?.meetingRecordingMode ?? false,
+            captureSystemAudio: mode?.captureSystemAudio ?? false
         )
     }
 
