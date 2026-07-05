@@ -53,9 +53,9 @@ extension MeetingAudioCaptureService: SCStreamOutput {
         guard type == .audio, let onAudioChunk = onAudioChunk else { return }
         
         // Extract PCM samples from CMSampleBuffer → convert to Int16 Data
-        guard let formatDescription = CMSampleBufferGetFormatDescription(sampleBuffer),
-              let audioFormat = AVAudioFormat(cmAudioFormatDescription: formatDescription),
-              let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) else {
+        guard let formatDescription = CMSampleBufferGetFormatDescription(sampleBuffer) else { return }
+        let audioFormat = AVAudioFormat(cmAudioFormatDescription: formatDescription)
+        guard let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) else {
             return
         }
         
